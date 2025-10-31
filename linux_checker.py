@@ -1,62 +1,47 @@
 #!/usr/bin/env python3
 """
-linux_checker.py - V0.2 : Simplified client.connect()
-author: zane
+linux_checker.py - V1.0: Huawei Cloud ECS SSH connection
+Author: Zane Summer
 """
 
 import paramiko
 import sys
 import os
-import socket
 
 USERNAME = "root"
 PRIVATE_KEY_PATH = os.path.expanduser("~/.ssh/id_rsa")
-HOST = "hhw"
+HOST = "124.70.88.117"
 PORT = 22
 
 def main():
     client = paramiko.SSHClient()
-    # 自动接受服务器的主机密钥（仅限开发/受信任环境）
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     print(f"connecting to {USERNAME}@{HOST}:{PORT} via SSH key...")
 
     try:
-        
+        KEY = paramiko.RSAKey.from_private_key_file(PRIVATE_KEY_PATH)
+
         client.connect(
             hostname=HOST,
             port=PORT,
             username=USERNAME,
-            key_filename=PRIVATE_KEY_PATH,
-            timeout=30,          # 整个连接的超时时间
-            banner_timeout=45,   # 等待 banner 的超时时间
-            auth_timeout=45      # 认证超时
+            pkey=KEY,
+            timeout=30,
+            banner_timeout=120
         )
-        
         print("SSH connection established!")
 
-        # === 在这里执行你的 SSH 命令 ===
-        print("Executing 'ls -l'...")
-        stdin, stdout, stderr = client.exec_command('ls -l /')
-        print(stdout.read().decode())
-        
-        if stderr.channel.recv_exit_status() != 0:
-             print("===Error executing command:===")
-             print(stderr.read().decode())
-        # ===============================
+        # 测试命令
+        stdin, stdout, stderr = client.exec_command("uptime")
+        print("\n=== Remote uptime ===")
+        print(stdout.read().decode().strip())
 
-    except paramiko.ssh_exception.AuthenticationException as e:
-        print(f"===Authentication failed: {e}===")
-        sys.exit(1)
-    except (socket.timeout, paramiko.ssh_exception.SSHException) as e:
-        print(f"===Connection failed (timeout or SSH error): {e}===")
-        sys.exit(1)
     except Exception as e:
-        print(f"===An unexpected error occurred: {e}===")
+        print(f"connection failed: {e}")
         sys.exit(1)
     finally:
-        if client:
-            client.close()
-            print("SSH connection closed.")
+        client.close()
+        print("SSH connection closed.")
 
 if __name__ == "__main__":
     main()
