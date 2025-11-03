@@ -1,0 +1,11 @@
+{
+  "hosts": [
+    {
+      "alias": "hhw",
+      "username": "root",
+      "port": 22,
+      "key": "~/.ssh/id_rsa",
+      "commands": ["uptime", "df -h"]
+    }
+  ]
+}

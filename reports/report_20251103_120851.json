@@ -1,0 +1,15 @@
+{
+  "generated_at": "2025-11-03T12:08:51.519934",
+  "total_hosts": 1,
+  "success": 1,
+  "results": [
+    {
+      "host": "hhw",
+      "status": "success",
+      "outputs": {
+        "uptime": "12:08:49 up 3 days, 21:15,  0 users,  load average: 0.00, 0.00, 0.00",
+        "df -h": "Filesystem      Size  Used Avail Use% Mounted on\ndevtmpfs        1.2G     0  1.2G   0% /dev\ntmpfs           1.5G     0  1.5G   0% /dev/shm\ntmpfs           1.5G   14M  1.5G   1% /run\ntmpfs           1.5G     0  1.5G   0% /sys/fs/cgroup\n/dev/vda2        39G  3.4G   33G  10% /\ntmpfs           1.5G   64K  1.5G   1% /tmp\n/dev/vda1      1022M  6.5M 1016M   1% /boot/efi\ntmpfs           298M     0  298M   0% /run/user/0"
+      }
+    }
+  ]
+}
