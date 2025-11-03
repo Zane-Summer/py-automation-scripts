@@ -34,6 +34,29 @@ def generate_report(results):
     
     print(f"Report saved: {report_file}")
 
+def parse_disk_alert(df_output:str):
+    # 解析df -h,检查用率>80%
+    alert = []
+    lines = df_output.splitlines()
+
+    for line in lines[1:]:
+        if not line or line.lstrip().startswith('tmpfs') or line.lstrip().startswith('udev'):
+            continue
+
+        parts = line.split()
+        if len(parts) < 5:
+            continue
+
+        usage = parts[4].rstrip('%')
+        if usage.isdigit() and int(usage) > 80:
+            mount = parts[5] if len(parts) > 5 else 'unknown'
+            alert.append(f"Disk {mount} usage {usage}% > 80%")
+    return alert if alert else None
+
+
+
+
+
 def main():
     print("Starting Cloud Inspector V2.0...")
     hosts = load_hosts()
@@ -55,9 +78,20 @@ def main():
 
         if client.connect():
             host_result["status"] = "success"
-            for cmd in h.get("commands", []):
+
+            for cmd in h.get("commands", []):  
                 output = client.exec_command(cmd).strip()
-                host_result["outputs"][cmd] = output
+                
+                if cmd == 'df -h' and output:
+                    host_result["outputs"][cmd] = output.splitlines()
+                    alert = parse_disk_alert(output)
+                    if alert:
+                        host_result['alert'] = alert
+                        print(f"WARNING: {h['alias']} disk alert detected: {alert}")
+                else:
+                    host_result["outputs"][cmd] = output
+
+
         else:
             host_result["outputs"]["error"] = "Connection failed"
 
