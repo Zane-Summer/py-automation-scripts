@@ -1,105 +1,40 @@
 # main.py
-#!/usr/bin/env python3
-"""
-Cloud Inspector V2.0 - 批量巡检 + JSON 报告
-Author: zane
-"""
-
 import json
-from datetime import datetime
+import argparse
 from pathlib import Path
-from checker.ssh_client import SSHClient
+from checker.inspector import inspect_hosts
+from reporter.reporter import generate_report
 
-CONFIG_PATH = Path("config/hosts.json")
-REPORT_DIR = Path("reports")
-REPORT_DIR.mkdir(exist_ok=True)
-
-def load_hosts():
-    with open(CONFIG_PATH) as f:
-        return json.load(f)["hosts"]
-
-def generate_report(results):
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    report_file = REPORT_DIR / f"report_{timestamp}.json"
-    
-    report = {
-        "generated_at": datetime.now().isoformat(),
-        "total_hosts": len(results),
-        "success": sum(1 for r in results if r["status"] == "success"),
-        "results": results
-    }
-    
-    with open(report_file, "w", encoding="utf-8") as f:
-        json.dump(report, f, indent=2, ensure_ascii=False)
-    
-    print(f"Report saved: {report_file}")
-
-def parse_disk_alert(df_output:str):
-    # 解析df -h,检查用率>80%
-    alert = []
-    lines = df_output.splitlines()
-
-    for line in lines[1:]:
-        if not line or line.lstrip().startswith('tmpfs') or line.lstrip().startswith('udev'):
-            continue
-
-        parts = line.split()
-        if len(parts) < 5:
-            continue
-
-        usage = parts[4].rstrip('%')
-        if usage.isdigit() and int(usage) > 80:
-            mount = parts[5] if len(parts) > 5 else 'unknown'
-            alert.append(f"Disk {mount} usage {usage}% > 80%")
-    return alert if alert else None
-
-
-
-
+def load_hosts(file="hosts.json"):
+    config_dir = Path("config")
+    config_dir.mkdir(exist_ok=True)
+    file_path = config_dir / file  # e.g. file="hosts.json" → "config/hosts.json"
+    if not file_path.exists():
+        raise FileNotFoundError(f"{file_path} not found...")
+    with open(file_path) as f:  # 用 file_path
+        data = json.load(f)
+    return data.get("hosts", [])
 
 def main():
-    print("Starting Cloud Inspector V2.0...")
-    hosts = load_hosts()
-    results = []
+    parser = argparse.ArgumentParser(description="批量主机巡检工具")
+    parser.add_argument("--hosts", default="hosts.json", help="主机配置文件")
+    parser.add_argument("--tags", help="过滤标签, e.g., env=prod,role=web")
+    parser.add_argument("--commands", nargs="+", help="自定义命令列表")
+    args = parser.parse_args()
 
-    for h in hosts:
-        client = SSHClient(
-            host_alias=h["alias"],
-            username=h.get("username"),
-            port=h.get("port", 22),
-            key_path=h.get("key")
-        )
+    print("Starting batch inspection...")
+    hosts = load_hosts(args.hosts)
+    
+    # 解析 tags 过滤
+    tags_filter = {}
+    if args.tags:
+        for tag in args.tags.split(","):
+            k, v = tag.split("=")
+            tags_filter[k] = v
 
-        host_result = {
-            "host": h["alias"],
-            "status": "failed",
-            "outputs": {}
-        }
-
-        if client.connect():
-            host_result["status"] = "success"
-
-            for cmd in h.get("commands", []):  
-                output = client.exec_command(cmd).strip()
-                
-                if cmd == 'df -h' and output:
-                    host_result["outputs"][cmd] = output.splitlines()
-                    alert = parse_disk_alert(output)
-                    if alert:
-                        host_result['alert'] = alert
-                        print(f"WARNING: {h['alias']} disk alert detected: {alert}")
-                else:
-                    host_result["outputs"][cmd] = output
-
-
-        else:
-            host_result["outputs"]["error"] = "Connection failed"
-
-        results.append(host_result)
-        client.close()
-
-    generate_report(results)
-    print("Inspection completed!")
+    results = inspect_hosts(hosts, tags_filter, args.commands)
+    report_file = generate_report(results)
+    print(f"\n巡检完成，报告: {report_file}")
 
 if __name__ == "__main__":
     main()

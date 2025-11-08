@@ -1,11 +1,13 @@
 {
   "hosts": [
     {
-      "alias": "hhw",
+      "host": "124.70.88.117",
+      "name": "hhw",
       "username": "root",
       "port": 22,
-      "key": "~/.ssh/id_rsa",
-      "commands": ["uptime", "df -h"]
+      "key_path": "~/.ssh/id_rsa",
+      "commands": ["uptime", "df -h"],
+      "tags": {"env": "prod"}
     }
   ]
 }
