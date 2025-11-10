@@ -8,6 +8,15 @@
       "key_path": "~/.ssh/id_rsa",
       "commands": ["uptime", "df -h"],
       "tags": {"env": "prod"}
+    },
+    {
+      "host": "127.0.0.1",
+      "name": "loopback",
+      "username": "zane",
+      "password": "0",
+      "port": 22,
+      "commands": ["uptime"],
+      "tags": {"env": "local"}
     }
   ]
 }

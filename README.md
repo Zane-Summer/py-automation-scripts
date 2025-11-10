@@ -8,10 +8,11 @@
 ## ✨ 功能
 
 - **SSH 密钥/密码登录**：支持 RSA / Ed25519，自动解析 `~/.ssh/config`  
-- **批量巡检**：从 `config/hosts.json` 加载多主机，循环执行 `uptime`, `df -h` 等命令  
-- **警报**：实时检测磁盘使用率，>80% 打印 `WARNING` 并在报告中标记  
-- **报告**：JSON 输出到 `reports/`，包含摘要（成功/失败数）、时间戳  
-- **CLI 支持**：`--hosts-file` 切换配置，`--commands` 自定义命令  
+- **并发巡检**：使用 `ThreadPoolExecutor` 同时 SSH 多台主机，可自定义 `--max-workers`  
+- **多维警报**：磁盘/内存/1 分钟负载阈值检测，告警写入日志与报告  
+- **配置校验**：启动前用 `jsonschema` 验证 `hosts.json`，提前发现缺失字段/密钥不存在  
+- **结构化日志**：`logging` + `RotatingFileHandler` 输出到终端 & `logs/app.log`，支持 `--log-level`  
+- **报告增强**：JSON 报告包含成功/失败/告警计数 & 平均/最长耗时，保留“未来 HTML 渲染”入口  
 
 ---
 
@@ -34,7 +35,7 @@ source venv/bin/activate  # Linux/Mac
 ### 3. 安装依赖
 
 ```bash
-pip install paramiko
+pip install -r requirements.txt
 ```
 
 ---
@@ -52,7 +53,8 @@ pip install paramiko
       "username": "root",
       "port": 22,
       "key_path": "~/.ssh/id_rsa",
-      "commands": ["uptime", "df -h"]
+      "commands": ["uptime", "df -h"],
+      "tags": {"env": "prod"}
     }
   ]
 }
@@ -71,17 +73,22 @@ python main.py
 **输出示例：**
 
 ```
-Starting batch inspection...
-Connected to 124.70.88.117
-WARNING: 磁盘 / 用率 85% > 80%
-→ success
-Report generated: reports/report_20251107_192604.json
+2025-11-10 05:23:24 | INFO | __main__ | Starting batch inspection...
+2025-11-10 05:23:25 | INFO | checker.ssh_client | Connected to 124.70.88.117:22
+2025-11-10 05:23:25 | WARNING | checker.inspector | WARNING: 磁盘 / 用率 85% > 80%
+2025-11-10 05:23:26 | INFO | checker.inspector | → hhw: success (1.231s)
+2025-11-10 05:23:26 | INFO | reporter.reporter | -----报告生成成功: reports/report_20251110_052326.json-----
 ```
 
 ### CLI 示例
 
 ```bash
-python main.py --hosts-file custom_hosts.json --commands "uptime" "free -h"
+python main.py \
+  --hosts custom_hosts.json \
+  --commands uptime "free -m" \
+  --tags env=prod \
+  --max-workers 10 \
+  --log-level DEBUG
 ```
 
 ---
@@ -91,14 +98,17 @@ python main.py --hosts-file custom_hosts.json --commands "uptime" "free -h"
 ```
 py-automation-scripts/
 ├── config/
-│   └── hosts.json          # 主机配置
+│   ├── hosts.json          # 主机配置
+│   └── validator.py        # jsonschema 校验
 ├── checker/
 │   ├── __init__.py
-│   ├── ssh_client.py       # SSH 连接
-│   ├── inspector.py        # 巡检 + 警报
+│   ├── ssh_client.py       # SSH 连接 + 命令执行
+│   ├── inspector.py        # 并行巡检 + 告警
 │   └── reporter.py         # 报告生成
-├── main.py                 # 入口
+├── main.py                 # 入口 + CLI + 日志初始化
 ├── reports/                # 生成报告
+├── logs/                   # 轮转日志
+├── tests/                  # pytest
 └── README.md
 ```
 
@@ -107,9 +117,9 @@ py-automation-scripts/
 ## 🔧 扩展功能
 
 - **加命令**：在 `hosts.json` 的 `"commands"` 列表中添加命令即可  
-- **并行巡检**：修改 `inspector.py` 使用 `concurrent.futures` 实现多线程  
-- **警报扩展**：修改 `inspector.py` 增加 `parse_memory_alert()` 等函数  
-- **测试**：`pytest tests/`
+- **阈值自定义**：每台主机可配置 `memory_threshold` / `disk_threshold` / `load_multiplier`  
+- **日志/告警**：通过 `--log-level` 切换输出级别，或解析 `logs/app.log` 定位问题  
+- **测试**：运行 `pytest -q`，覆盖配置校验 & 告警解析  
 
 ---
 
