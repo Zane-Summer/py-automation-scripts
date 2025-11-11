@@ -8,8 +8,8 @@ from pydantic import BaseModel, Field
 
 from app import APP_VERSION
 from checker.inspector import inspect_hosts
-from config.validator import validate_hosts_config
-from main import load_hosts, parse_tags, setup_logging
+from config.loader import load_settings
+from main import parse_tags, setup_logging
 from reporter.reporter import generate_report
 
 logger = logging.getLogger(__name__)
@@ -57,8 +57,8 @@ def version() -> dict:
 @app.post("/run", response_model=RunResult)
 def run_inspection(payload: RunRequest) -> RunResult:
     setup_logging(payload.log_level)
-    hosts = load_hosts(payload.hosts_file)
-    validate_hosts_config(hosts)
+    settings = load_settings(payload.hosts_file)
+    hosts = [host.model_dump() for host in settings.hosts]
 
     tags_filter = parse_tags(payload.tags)
     results = inspect_hosts(

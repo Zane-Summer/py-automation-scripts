@@ -3,3 +3,4 @@ jsonschema
 pytest
 fastapi
 uvicorn
+pydantic

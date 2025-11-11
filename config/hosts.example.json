@@ -1,0 +1,19 @@
+{
+  "hosts": [
+    {
+      "host": "192.168.0.10",
+      "name": "dev-1",
+      "username": "ubuntu",
+      "port": 22,
+      "key_path": "~/.ssh/id_ed25519",
+      "commands": [
+        "uptime",
+        "df -h"
+      ],
+      "tags": {
+        "env": "dev"
+      }
+    }
+  ],
+  "timeout_sec": 10
+}

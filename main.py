@@ -1,24 +1,11 @@
 import argparse
-import json
 import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from checker.inspector import inspect_hosts
-from config.validator import validate_hosts_config
+from config.loader import load_settings
 from reporter.reporter import generate_report
-
-
-def load_hosts(file: str = "hosts.json"):
-    """Read host definitions from config directory."""
-    config_dir = Path("config")
-    config_dir.mkdir(exist_ok=True)
-    file_path = config_dir / file
-    if not file_path.exists():
-        raise FileNotFoundError(f"{file_path} not found...")
-    with open(file_path) as f:
-        data = json.load(f)
-    return data.get("hosts", [])
 
 
 def setup_logging(level_name: str) -> None:
@@ -79,8 +66,8 @@ def main():
     logger = logging.getLogger(__name__)
     logger.info("Starting batch inspection...")
 
-    hosts = load_hosts(args.hosts)
-    validate_hosts_config(hosts)
+    settings = load_settings(args.hosts)
+    hosts = [host.model_dump() for host in settings.hosts]
 
     tags_filter = parse_tags(args.tags)
 

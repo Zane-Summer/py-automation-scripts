@@ -62,6 +62,7 @@ pip install -r requirements.txt
 
 - **EN** · Each host can define custom commands, SSH auth, and optional tags for filtering.  
 - **ZH** · 每台主机可定制命令、认证方式及标签，便于筛选与扩展。
+- ✅ 配置文件开机即校验：项目使用 Pydantic 模型强约束端口、密钥路径等字段，写错字段名或格式会直接报 `[CONFIG ERROR]`，可参考 `config/hosts.example.json` 复制修改。
 
 ---
 
