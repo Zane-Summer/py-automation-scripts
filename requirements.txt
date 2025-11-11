@@ -1,3 +1,5 @@
 paramiko
 jsonschema
 pytest
+fastapi
+uvicorn
