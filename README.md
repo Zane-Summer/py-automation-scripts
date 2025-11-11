@@ -1,38 +1,38 @@
-# Py Automation Scripts
+# Py Automation Scripts · Python 自动化巡检工具
 
-**Python 自动化巡检工具**  
-支持 SSH 批量检查云服务器（如华为云 ECS），生成 JSON 报告 + 警报（如磁盘使用率 >80%）。
-
----
-
-## ✨ 功能
-
-- **SSH 密钥/密码登录**：支持 RSA / Ed25519，自动解析 `~/.ssh/config`  
-- **并发巡检**：使用 `ThreadPoolExecutor` 同时 SSH 多台主机，可自定义 `--max-workers`  
-- **多维警报**：磁盘/内存/1 分钟负载阈值检测，告警写入日志与报告  
-- **配置校验**：启动前用 `jsonschema` 验证 `hosts.json`，提前发现缺失字段/密钥不存在  
-- **结构化日志**：`logging` + `RotatingFileHandler` 输出到终端 & `logs/app.log`，支持 `--log-level`  
-- **报告增强**：JSON 报告包含成功/失败/告警计数 & 平均/最长耗时，保留“未来 HTML 渲染”入口  
+**EN** · Headless SSH automation that inspects multiple Linux hosts, enforces resource thresholds, and exports structured JSON reports.  
+**ZH** · 一款通过 SSH 并发巡检多台 Linux 主机的自动化脚本，支持资源阈值告警与结构化 JSON 报告。
 
 ---
 
-## ⚙️ 安装
+## ✨ Features 功能特色
 
-### 1. 克隆仓库
+- **SSH key/password login** · 支持 RSA/Ed25519 密钥与密码登录，自动解析 `~/.ssh/config`。  
+- **Parallel inspection** · 依赖 `ThreadPoolExecutor` 同时巡检多台主机，可通过 `--max-workers` 调整并发。  
+- **Multi-metric alerts** · 监控磁盘、内存、1 分钟负载阈值，自动写入日志与报告。  
+- **Config validation** · 启动前使用 `jsonschema` 校验 `hosts.json`，即时发现缺失字段或密钥路径错误。  
+- **Structured logging** · `logging` + `RotatingFileHandler` 输出终端与 `logs/app.log`，可通过 `--log-level` 切换。  
+- **Report insights** · 报告包含成功/失败/告警统计及耗时指标，预留 HTML 渲染扩展入口。
+
+---
+
+## ⚙️ Install 安装步骤
+
+### 1. Clone the repo · 克隆仓库
 
 ```bash
 git clone https://github.com/Zane-Summer/py-automation-scripts.git
 cd py-automation-scripts
 ```
 
-### 2. 创建并激活虚拟环境
+### 2. Create & activate venv · 创建并激活虚拟环境
 
 ```bash
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
 ```
 
-### 3. 安装依赖
+### 3. Install dependencies · 安装依赖
 
 ```bash
 pip install -r requirements.txt
@@ -40,9 +40,9 @@ pip install -r requirements.txt
 
 ---
 
-## 🧩 配置 `hosts.json`
+## 🧩 Configure `hosts.json` · 配置示例
 
-路径：`config/hosts.json`
+路径 Path: `config/hosts.json`
 
 ```json
 {
@@ -60,17 +60,23 @@ pip install -r requirements.txt
 }
 ```
 
+- **EN** · Each host can define custom commands, SSH auth, and optional tags for filtering.  
+- **ZH** · 每台主机可定制命令、认证方式及标签，便于筛选与扩展。
+
 ---
 
-## 🚀 使用
+## 🚀 Usage 使用方式
 
-### 基本运行
+### Basic run · 基本执行
 
 ```bash
 python main.py
 ```
 
-**输出示例：**
+**EN** · The CLI loads `config/hosts.json`, launches concurrent SSH sessions, and drops the report in `reports/`.  
+**ZH** · CLI 会读取默认配置并发发起 SSH，会话完成后在 `reports/` 目录生成 JSON 报告。
+
+示例输出 Sample log:
 
 ```
 2025-11-10 05:23:24 | INFO | __main__ | Starting batch inspection...
@@ -80,7 +86,7 @@ python main.py
 2025-11-10 05:23:26 | INFO | reporter.reporter | -----报告生成成功: reports/report_20251110_052326.json-----
 ```
 
-### CLI 示例
+### CLI example · 命令行示例
 
 ```bash
 python main.py \
@@ -91,63 +97,56 @@ python main.py \
   --log-level DEBUG
 ```
 
+- **EN** · Override hosts, inject ad-hoc commands, filter tags, tune concurrency, and raise verbosity.  
+- **ZH** · 可替换主机清单、临时追加命令、按标签过滤、调整并发与日志级别。
+
 ---
 
-## 🗂️ 项目结构
+## 🗂️ Project Structure 项目结构
 
 ```
 py-automation-scripts/
 ├── config/
-│   ├── hosts.json          # 主机配置
-│   └── validator.py        # jsonschema 校验
+│   ├── hosts.json          # hosts definition 主机定义
+│   └── validator.py        # jsonschema validation 配置校验
 ├── checker/
-│   ├── __init__.py
-│   ├── ssh_client.py       # SSH 连接 + 命令执行
-│   ├── inspector.py        # 并行巡检 + 告警
-│   └── reporter.py         # 报告生成
-├── main.py                 # 入口 + CLI + 日志初始化
-├── reports/                # 生成报告
-├── logs/                   # 轮转日志
-├── tests/                  # pytest
+│   ├── ssh_client.py       # SSH session + command execution
+│   ├── inspector.py        # parallel inspection & alerts
+│   └── reporter.py         # JSON report builder
+├── main.py                 # CLI entrypoint + logging setup
+├── reports/                # generated reports
+├── logs/                   # rotating logs
+├── tests/                  # pytest suite
 └── README.md
 ```
 
 ---
 
-## 🔧 扩展功能
+## 🔧 Extend & Customize 扩展与自定义
 
-- **加命令**：在 `hosts.json` 的 `"commands"` 列表中添加命令即可  
-- **阈值自定义**：每台主机可配置 `memory_threshold` / `disk_threshold` / `load_multiplier`  
-- **日志/告警**：通过 `--log-level` 切换输出级别，或解析 `logs/app.log` 定位问题  
-- **测试**：运行 `pytest -q`，覆盖配置校验 & 告警解析  
-
----
-
-## 🤝 贡献
-
-欢迎 Issue 或 Pull Request！
-
-1. Fork 本仓库  
-2. 创建特性分支  
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
-3. 提交修改  
-   ```bash
-   git commit -m "Add amazing feature"
-   ```
-4. 推送到分支  
-   ```bash
-   git push origin feature/amazing-feature
-   ```
-5. 提交 Pull Request  
+- **Add commands** · 在 `hosts.json` 的 `"commands"` 中扩充检查指令。  
+- **Per-host thresholds** · 支持 `memory_threshold` / `disk_threshold` / `load_multiplier` 定制。  
+- **Logging & alerts** · 借助 `--log-level` 调整输出，或直接分析 `logs/app.log`。  
+- **Testing** · 运行 `pytest -q` 快速验证配置校验与告警逻辑。
 
 ---
 
-## 📜 License
+## 🤝 Contribute 贡献方式
 
-本项目基于 **MIT License** 开源。  
-详情见 [LICENSE](LICENSE) 文件。
+1. **Fork** · Fork 本仓库  
+2. **Branch** · `git checkout -b feature/amazing-feature`  
+3. **Commit** · `git commit -m "Add amazing feature"`  
+4. **Push** · `git push origin feature/amazing-feature`  
+5. **PR** · 提交 Pull Request，分享你的改进。
+
+Issues & PRs are always welcome! 欢迎通过 Issue/PR 交流想法。
+
+---
+
+## 📜 License 许可协议
+
+Released under the **MIT License**. See `LICENSE` for details.  
+本项目基于 **MIT License** 开源，详情见 `LICENSE`。
 
 ---
 
