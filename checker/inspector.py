@@ -1,3 +1,5 @@
+"""Concurrent SSH inspection orchestration and alert parsing."""
+
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 import logging

@@ -79,7 +79,7 @@ python main.py
 
 示例输出 Sample log:
 
-```
+```text
 2025-11-10 05:23:24 | INFO | __main__ | Starting batch inspection...
 2025-11-10 05:23:25 | INFO | checker.ssh_client | Connected to 124.70.88.117:22
 2025-11-10 05:23:25 | WARNING | checker.inspector | WARNING: 磁盘 / 用率 85% > 80%
@@ -105,7 +105,7 @@ python main.py \
 
 ## 🗂️ Project Structure 项目结构
 
-```
+```text
 py-automation-scripts/
 ├── config/
 │   ├── hosts.json          # hosts definition 主机定义
@@ -151,4 +151,4 @@ Released under the **MIT License**. See `LICENSE` for details.
 
 ---
 
-**Zane-Summer | [GitHub](https://github.com/Zane-Summer) | Email**
+**Zane Summer | [GitHub](https://github.com/Zane-Summer) | [Email](mailto:engshix@gmail.com)**
