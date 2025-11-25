@@ -207,3 +207,11 @@ marimo/_lsp/
 __marimo__/
 1.py
 reports/
+logs/
+
+# Local host configs (keep sample files under config/)
+config/hosts.json
+
+# SSH/private keys
+*.pem
+*.key

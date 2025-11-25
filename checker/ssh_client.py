@@ -31,7 +31,7 @@ class SSHClient:
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         if self.key_path and Path(self.key_path).exists():
-            pkey = paramiko.RSAKey.from_private_key_file(self.key_path)
+            pkey = self._load_private_key(self.key_path)
             self.client.connect(
                 hostname=self.host,
                 port=self.port,
@@ -54,6 +54,19 @@ class SSHClient:
 
         logger.info("Connected to %s:%s", self.host, self.port)
         return True
+
+    @staticmethod
+    def _load_private_key(path: str):
+        """支持 RSA/Ed25519 私钥，优先尝试 RSA 后回退 Ed25519."""
+        loaders = (paramiko.RSAKey, paramiko.Ed25519Key)
+        last_exc: Optional[Exception] = None
+        for loader in loaders:
+            try:
+                return loader.from_private_key_file(path)
+            except paramiko.SSHException as exc:
+                last_exc = exc
+                continue
+        raise last_exc or ValueError("Unsupported key format")
 
     def exec_command(self, command: str, timeout: Optional[float] = None) -> str:
         """Execute remote command with可配置超时, 返回 stdout 或包装错误."""
