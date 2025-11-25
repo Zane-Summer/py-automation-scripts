@@ -16,7 +16,10 @@ class SSHClient:
         self.host = host_config.get("host", "localhost")
         self.username = host_config.get("username", "root")
         self.port = host_config.get("port", 22)
-        self.key_path = str(Path(host_config.get("key_path", "~/.ssh/id_rsa")).expanduser())
+        raw_key_path = host_config.get("key_path")
+        if raw_key_path is None and not host_config.get("password"):
+            raw_key_path = "~/.ssh/id_rsa"
+        self.key_path = str(Path(raw_key_path).expanduser()) if raw_key_path else None
         self.password = host_config.get("password")
         self.timeout = host_config.get("timeout", timeout)
         self.command_timeout = host_config.get("command_timeout", 10)

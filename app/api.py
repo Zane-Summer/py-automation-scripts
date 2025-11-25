@@ -1,9 +1,10 @@
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
 
 from app import APP_VERSION
@@ -38,6 +39,15 @@ app = FastAPI(
 )
 
 
+def require_api_token(x_api_key: Optional[str] = Header(default=None)) -> None:
+    """Simple opt-in API key check via env API_TOKEN."""
+    expected = os.getenv("API_TOKEN")
+    if not expected:
+        return  # no token configured -> allow
+    if x_api_key != expected:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+
 @app.on_event("startup")
 def configure_logging() -> None:
     setup_logging("INFO")
@@ -55,7 +65,7 @@ def version() -> dict:
 
 
 @app.post("/run", response_model=RunResult)
-def run_inspection(payload: RunRequest) -> RunResult:
+def run_inspection(payload: RunRequest, _auth: None = Depends(require_api_token)) -> RunResult:
     setup_logging(payload.log_level)
     settings = load_settings(payload.hosts_file)
     hosts = [host.model_dump() for host in settings.hosts]

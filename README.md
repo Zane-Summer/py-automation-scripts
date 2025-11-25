@@ -101,6 +101,14 @@ python main.py \
 - **EN** · Override hosts, inject ad-hoc commands, filter tags, tune concurrency, and raise verbosity.  
 - **ZH** · 可替换主机清单、临时追加命令、按标签过滤、调整并发与日志级别。
 
+## 🧪 Testing 测试
+
+在项目根目录运行：
+
+```bash
+python -m pytest -q
+```
+
 ---
 
 ## 🗂️ Project Structure 项目结构

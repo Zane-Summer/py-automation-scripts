@@ -1,15 +1,6 @@
 {
   "hosts": [
     {
-      "host": "124.70.88.117",
-      "name": "hhw",
-      "username": "root",
-      "port": 22,
-      "key_path": "~/.ssh/id_rsa",
-      "commands": ["uptime", "df -h"],
-      "tags": {"env": "prod"}
-    },
-    {
       "host": "127.0.0.1",
       "name": "loopback",
       "username": "zane",
@@ -17,6 +8,15 @@
       "port": 22,
       "commands": ["uptime"],
       "tags": {"env": "local"}
+    },
+    {
+      "host": "52.14.128.218",
+      "name": "My First Instance",
+      "username": "ec2-user",
+      "key_path": "/home/zane/.ssh/ec2_1.pem",
+      "port": 22,
+      "commands": ["uptime", "df -h"],
+      "tags": {"env": "aws"}
     }
   ]
 }

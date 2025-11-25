@@ -41,7 +41,8 @@ def inspect_single_host(
 
     start = time.perf_counter()
     commands_to_run = default_commands + host_config.get("commands", [])
-    retries = host_config.get("retries", RETRY_ATTEMPTS)
+    # allow None from config -> fallback
+    retries = host_config.get("retries") or RETRY_ATTEMPTS
     command_timeout = host_config.get("command_timeout", ssh.command_timeout)
 
     try:
@@ -173,20 +174,24 @@ def collect_alerts(command: str, output: str, host_config: Dict[str, Any]) -> Li
     """Dispatch to对应解析器, 聚合磁盘/内存/负载告警."""
     alerts = []
     if command == "df -h":
-        alert = parse_disk_alert(output, threshold=host_config.get("disk_threshold", DEFAULT_DISK_THRESHOLD))
+        disk_threshold = host_config.get("disk_threshold") or DEFAULT_DISK_THRESHOLD
+        alert = parse_disk_alert(output, threshold=disk_threshold)
         if alert:
             alerts.append(alert)
             logger.warning("WARNING: %s", alert)
     if command in {"free -m", "free -h"}:
-        alert = parse_memory_alert(output, threshold=host_config.get("memory_threshold", DEFAULT_MEM_THRESHOLD))
+        mem_threshold = host_config.get("memory_threshold") or DEFAULT_MEM_THRESHOLD
+        alert = parse_memory_alert(output, threshold=mem_threshold)
         if alert:
             alerts.append(alert)
             logger.warning("WARNING: %s", alert)
     if command == "uptime":
+        cpu_cores = host_config.get("cpu_cores") or 1
+        load_multiplier = host_config.get("load_multiplier") or LOAD_MULTIPLIER
         alert = parse_load_alert(
             output,
-            cpu_cores=host_config.get("cpu_cores", 1),
-            multiplier=host_config.get("load_multiplier", LOAD_MULTIPLIER),
+            cpu_cores=cpu_cores,
+            multiplier=load_multiplier,
         )
         if alert:
             alerts.append(alert)

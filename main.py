@@ -78,6 +78,17 @@ def main():
         max_workers=args.max_workers,
     )
     report_file = generate_report(results)
+    success_hosts = len([r for r in results if r.get("status") == "success"])
+    failed_hosts = len([r for r in results if r.get("status") == "failed"])
+    total_alerts = sum(len(r.get("alerts", [])) for r in results)
+    logger.info(
+        "Summary: total=%d success=%d failed=%d alerts=%d report=%s",
+        len(results),
+        success_hosts,
+        failed_hosts,
+        total_alerts,
+        report_file,
+    )
     logger.info("巡检完成，报告: %s", report_file)
 
 
